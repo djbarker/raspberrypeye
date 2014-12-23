@@ -1,5 +1,6 @@
 #! /usr/bin/python
 
+import sys
 from subprocess import Popen,PIPE
 from datetime import datetime
 from time import sleep
@@ -18,17 +19,19 @@ def getTemp():
 with open('static/temps.tsv','w') as f:
     f.write('date\tclose\n')
 
+logging_int = 60. # once a minute
+if len(sys.argv)>1:
+    logging_int = float(sys.argv[1])
+
 while True:
     try:
         with mdb.connect('localhost','root','raspberry','temps') as con:
             date_str = datetime.now().strftime('%y-%m-%d %H:%M:%S')
-            #cur = con.cursor()
             sql = "INSERT INTO tblTemps VALUES ('%s',%f);"%(date_str,getTemp())
-            print(sql)
             con.execute(sql)
     except mdb.Error, e:
         print('MySQL Error %d: %s'%(e.args[0],e.args[1]))
 
-    sleep(60);
+    sleep(logging_int);
 
 

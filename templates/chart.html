@@ -20,7 +20,7 @@ body {
 .line {
   fill: none;
   stroke: steelblue;
-  stroke-width: 1.5px;
+  stroke-width: 1.75px;
 }
 
 </style>
@@ -34,6 +34,17 @@ body {
 
 <div id="div1"></div>
 
+<p>
+Look-back: 
+<select name="Lookback" id="ddlookback" onChange="lookback_change()">
+	<option value="10">200s</option>
+	<option value="25" selected="selected">500s</option>
+	<option value="50">1000s</option>
+	<option value="100">2000s</option>
+	<option value="200">4000s</option>
+</select>
+</p>
+
 <script>
 
 	$.ajaxSetup({ cache:false }); // this doesn't actually work with d3.tsv
@@ -42,7 +53,7 @@ body {
     		width = 800 - margin.left - margin.right,
     		height = 400 - margin.top  - margin.bottom;
 
-	var parseDate = d3.time.format("%d/%m/%y %H:%M:%S").parse;
+	var parseDate = d3.time.format("%a, %d %b %Y %H:%M:%S GMT").parse;
 
 	var x = d3.time.scale()
 	    .range([0, width]);
@@ -59,10 +70,11 @@ body {
 		.orient("left");
 
 	var count = 0
+	var lookback = 25
 
 	line = d3.svg.line()
 	    .x(function(d) { return x(d.date); })
-	    .y(function(d) { return y(d.close); });
+	    .y(function(d) { return y(d.temp); });
 
 	var svg = d3.select("div")
 		.append("svg")
@@ -71,15 +83,15 @@ body {
 		.append("g")
 		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-	// NOTE: the .tsv file must have a heading line with the column headings "date" and "close".
-	d3.tsv( "{{ url_for('static', filename='temps.tsv') }}", function(error,data){
+	d3.json( "/temps/?limit="+lookback+'&'+new Date().getTime(), function(error,data){
+		data = data.items
 	  data.forEach(function(d) {
-	    d.date = parseDate(d.date);
-	    d.close = +d.close;
+	    d.date = parseDate(d.timestamp);
+	    d.temp = +d.temp;
 	  });
 
 	  x.domain(d3.extent(data, function(d) { return d.date; }));
-	  y.domain(d3.extent(data, function(d) { return d.close; }));
+	  y.domain(d3.extent(data, function(d) { return d.temp; }));
 
 	d3.select("body").transition();
 	
@@ -103,28 +115,39 @@ body {
 	      .datum(data)
 	      .attr("class", "line")
 	      .attr("d", line);
-	}); // end d3.tsv(...)
+	}); // end d3.json(...)
+
+	function lookback_change()
+	{
+		var e = document.getElementById("ddlookback");
+		lookback = e.options[e.selectedIndex].value;
+		console.log(lookback)
+		load_and_draw()
+	}
+
 
 	function load_and_draw()
 	{
 		count += 1
-		d3.tsv( "{{ url_for('static', filename='temps.tsv') }}" + '?' + new Date().getTime()
+		console.log("/temps/" + '?limit=' + lookback + "&" + new Date().getTime())
+		d3.json( "/temps/" + '?limit=' + lookback + "&" + new Date().getTime()
 		, function(error, data) {
+			data = data.items
 		  data.forEach(function(d) {
-		    d.date = parseDate(d.date);
-		    d.close = +d.close;
+		    d.date = parseDate(d.timestamp);
+		    d.temp = +d.temp;
 		  });
 
 		// Scale the range of the data again 
 	    	x.domain(d3.extent(data, function(d) { return d.date; }));
-		y.domain(d3.extent(data, function(d) { return d.close; }));
+		y.domain(d3.extent(data, function(d) { return d.temp; }));
 
 
 		var svg = d3.select("body").transition();
 
 		// Make the changes
 		svg.select(".line")   // change the line
-		    .duration(1000)
+		    .duration(0)
 		    .attr("d", line(data));
 		svg.select(".x.axis") // change the x axis
 		    .duration(1000)

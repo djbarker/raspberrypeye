@@ -19,7 +19,8 @@ class Temps(db.Model):
 @app.route("/temps/",methods=['GET'])
 def temps():
 	if request.method == 'GET':
-		results = Temps.query.all()
+                lim = request.args.get('limit',10)
+		results = Temps.query.order_by(Temps.zeit.desc()).limit(lim).all()[::-1]
 
 		json_results = []
 		for result in results:
