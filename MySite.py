@@ -1,9 +1,33 @@
 #! /usr/bin/python
 
-from flask import Flask,render_template,jsonify
+from flask import Flask,render_template,jsonify,request
+from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 app = Flask(__name__)
+
+# setup MySQL data model for temperature API
+db = SQLAlchemy(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:raspberry@localhost/temps'
+
+class Temps(db.Model):
+	__tablename__  = "tblTemps"
+	zeit = db.Column(db.TIMESTAMP, primary_key = True)
+	temp = db.Column(db.Float)
+
+
+@app.route("/temps/",methods=['GET'])
+def temps():
+	if request.method == 'GET':
+		results = Temps.query.all()
+
+		json_results = []
+		for result in results:
+			d = {'timestamp':result.zeit,
+				 'temp':result.temp}
+			json_results.append(d)
+
+		return jsonify(items=json_results)
 
 @app.route("/systime.json")
 def systime():

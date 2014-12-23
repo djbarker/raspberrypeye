@@ -3,7 +3,7 @@
 from subprocess import Popen,PIPE
 from datetime import datetime
 from time import sleep
-import numpy as np
+import MySQLdb as mdb
 
 def getTemp():
     p = Popen(['/opt/vc/bin/vcgencmd','measure_temp'],stdout=PIPE)
@@ -18,18 +18,17 @@ def getTemp():
 with open('static/temps.tsv','w') as f:
     f.write('date\tclose\n')
 
-n = 20
-W = np.array(range(0,n))
-W = np.exp(-0.16*W)
-W /= np.sum(W)
-temps = [getTemp()]*int(n)
 while True:
-    with open('static/temps.tsv','a') as f:
-        date_str = datetime.now().strftime('%d/%m/%y %H:%M:%S')
-        f.write('%s\t%f\n'%(date_str, np.sum(np.array(temps)*W)))
+    try:
+        with mdb.connect('localhost','root','raspberry','temps') as con:
+            date_str = datetime.now().strftime('%d-%m-%y %H:%M:%S')
+            #cur = con.cursor()
+            sql = "INSERT INTO tblTemps VALUES ('%s',%f);"%(date_str,getTemp())
+            print(sql)
+            con.execute(sql)
+    except mdb.Error, e:
+        print('MySQL Error %d: %s'%(e.args[0],e.args[1]))
 
-    temps.append( getTemp() )
-    temps = temps[1:]
     sleep(60);
 
 

@@ -3,7 +3,7 @@
 <style>
 
 body {
-  font: 10px sans-serif;
+  font: 12px sans-serif;
 }
 
 .axis path,
@@ -29,6 +29,11 @@ body {
 <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
 <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script> 
 <script src="http://d3js.org/d3.v3.js"></script>
+
+<center>
+
+<div id="div1"></div>
+
 <script>
 
 	$.ajaxSetup({ cache:false }); // this doesn't actually work with d3.tsv
@@ -59,7 +64,7 @@ body {
 	    .x(function(d) { return x(d.date); })
 	    .y(function(d) { return y(d.close); });
 
-	var svg = d3.select("body")
+	var svg = d3.select("div")
 		.append("svg")
 		.attr("width", width + margin.left + margin.right)
 		.attr("height", height + margin.top + margin.bottom)
@@ -138,5 +143,7 @@ body {
 <p>
 	<a href="/clock">clock</a>
 </p>
+
+</center>
 
 </body>
