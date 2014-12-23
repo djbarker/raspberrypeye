@@ -1,0 +1,11 @@
+<html>
+<body>
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<center>
+  <h2>Greetings from Raspberry Pi</h2>
+  <p>Current system DateTime is {{data.date}}.</p>
+  <p>Here's a clock drawn with matplotlib:</p>
+  <image src="{{ url_for('static', filename='tmp.png') }}" height=300/>
+  <p>  <a href="/">home</a> </a>
+</center>
+</html></body>
