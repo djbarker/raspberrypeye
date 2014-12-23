@@ -21,7 +21,7 @@ with open('static/temps.tsv','w') as f:
 while True:
     try:
         with mdb.connect('localhost','root','raspberry','temps') as con:
-            date_str = datetime.now().strftime('%d-%m-%y %H:%M:%S')
+            date_str = datetime.now().strftime('%y-%m-%d %H:%M:%S')
             #cur = con.cursor()
             sql = "INSERT INTO tblTemps VALUES ('%s',%f);"%(date_str,getTemp())
             print(sql)
