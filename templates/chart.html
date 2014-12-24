@@ -37,11 +37,12 @@ body {
 <p>
 Look-back: 
 <select name="Lookback" id="ddlookback" onChange="lookback_change()">
-	<option value="10">200s</option>
-	<option value="25" selected="selected">500s</option>
-	<option value="50">1000s</option>
-	<option value="100">2000s</option>
-	<option value="200">4000s</option>
+	<option value="30m">30 minutes</option>
+	<option value="1h">1 hour</option>
+	<option value="6h" selected="selected">6 hours</option>
+	<option value="12h">12 hours</option>
+	<option value="1d">1 day</option>
+	<option value="7d">1 week</option>
 </select>
 </p>
 
@@ -70,7 +71,7 @@ Look-back:
 		.orient("left");
 
 	var count = 0
-	var lookback = 25
+	var lookback = '6h'
 
 	line = d3.svg.line()
 	    .x(function(d) { return x(d.date); })
@@ -83,7 +84,7 @@ Look-back:
 		.append("g")
 		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-	d3.json( "/temps/?limit="+lookback+'&'+new Date().getTime(), function(error,data){
+	d3.json( "/temps/?lookback="+lookback+'&'+new Date().getTime(), function(error,data){
 		data = data.items
 	  data.forEach(function(d) {
 	    d.date = parseDate(d.timestamp);
@@ -121,7 +122,6 @@ Look-back:
 	{
 		var e = document.getElementById("ddlookback");
 		lookback = e.options[e.selectedIndex].value;
-		console.log(lookback)
 		load_and_draw()
 	}
 
@@ -129,8 +129,8 @@ Look-back:
 	function load_and_draw()
 	{
 		count += 1
-		console.log("/temps/" + '?limit=' + lookback + "&" + new Date().getTime())
-		d3.json( "/temps/" + '?limit=' + lookback + "&" + new Date().getTime()
+		console.log("/temps/" + '?lookback=' + lookback + "&" + new Date().getTime())
+		d3.json( "/temps/" + '?lookback=' + lookback + "&" + new Date().getTime()
 		, function(error, data) {
 			data = data.items
 		  data.forEach(function(d) {
@@ -147,7 +147,7 @@ Look-back:
 
 		// Make the changes
 		svg.select(".line")   // change the line
-		    .duration(0)
+		    .duration(300)
 		    .attr("d", line(data));
 		svg.select(".x.axis") // change the x axis
 		    .duration(1000)

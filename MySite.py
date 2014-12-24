@@ -2,7 +2,19 @@
 
 from flask import Flask,render_template,jsonify,request
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime,timedelta
+
+def str2timedelta(val):
+        last = val[-1].lower()
+        num = int(val[:-1])
+        if last=='s':
+                return timedelta(seconds=num)
+        elif last=='m':
+                return timedelta(minutes=num)
+        elif last=='h':
+                return timedelta(hours=num)
+        elif last=='d':
+                return timedelta(days=num)
 
 app = Flask(__name__)
 
@@ -11,24 +23,35 @@ db = SQLAlchemy(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:raspberry@localhost/temps'
 
 class Temps(db.Model):
-	__tablename__  = "tblTemps"
-	zeit = db.Column(db.TIMESTAMP, primary_key = True)
-	temp = db.Column(db.Float)
+        __tablename__  = "tblTemps"
+        zeit = db.Column(db.TIMESTAMP, primary_key = True)
+        temp = db.Column(db.Float)
 
 
 @app.route("/temps/",methods=['GET'])
 def temps():
-	if request.method == 'GET':
-                lim = request.args.get('limit',10)
-		results = Temps.query.order_by(Temps.zeit.desc()).limit(lim).all()[::-1]
+        if request.method == 'GET':
+                results = Temps.query.order_by(Temps.zeit.desc()) # base query
 
-		json_results = []
-		for result in results:
-			d = {'timestamp':result.zeit,
-				 'temp':result.temp}
-			json_results.append(d)
+                # apply modifiers
+                if 'lookback' in request.args:
+                        delta = str2timedelta(request.args.get('lookback','12h'))
+                        begin = datetime.now() - delta
+                        results = results.filter(Temps.zeit > begin)
 
-		return jsonify(items=json_results)
+                if 'limit' in request.args:
+                        lim = request.args.get('limit',0)
+                        results = results.limit(lim)
+
+                results = results.all()[::-1]
+
+                json_results = []
+                for result in results:
+                        d = {'timestamp':result.zeit,
+                             'temp':result.temp}
+                        json_results.append(d)
+
+                return jsonify(items=json_results)
 
 @app.route("/systime.json")
 def systime():
