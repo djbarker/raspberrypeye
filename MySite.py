@@ -3,6 +3,8 @@
 from flask import Flask,render_template,jsonify,request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,timedelta
+import scipy.interpolate as sci
+import numpy as np
 
 def str2timedelta(val):
         last = val[-1].lower()
@@ -39,17 +41,28 @@ def temps():
                         begin = datetime.now() - delta
                         results = results.filter(Temps.zeit > begin)
 
-                if 'limit' in request.args:
-                        lim = request.args.get('limit',0)
-                        results = results.limit(lim)
-
                 results = results.all()[::-1]
 
+                lim = int(request.args.get('limit',0xFFFFFF))
                 json_results = []
-                for result in results:
-                        d = {'timestamp':result.zeit,
-                             'temp':result.temp}
-                        json_results.append(d)
+                if lim > len(results):
+                        for result in results:
+                                d = {'timestamp':result.zeit,
+                                     'temp':result.temp}
+                                json_results.append(d)
+                else:
+                        start = results[0].zeit
+                        deltas = []
+                        temps = []
+                        for result in results:
+                                deltas.append( (result.zeit-start).total_seconds() )
+                                temps.append( result.temp )
+                        f = sci.interp1d(deltas,temps,kind='linear')
+                        new_deltas = np.linspace(min(deltas),max(deltas),lim)
+                        new_temps = f(new_deltas)
+                        for (d,t) in zip(new_deltas,new_temps):
+                                json_results.append({'timestamp': start + timedelta(seconds=d),
+                                                     'temp': t})
 
                 return jsonify(items=json_results)
 

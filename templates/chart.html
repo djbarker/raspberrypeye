@@ -32,6 +32,10 @@ body {
 
 <center>
 
+ <h2>Greetings from Raspberry Pi</h2>
+	<p>The chart below shows the CPU temperature of RaspberryPi.</p> 
+	<p>To see the raw JSON visit <a href="/temps/?lookback=6h">/temps/?lookback=6h</a>, for instance.</p>
+
 <div id="div1"></div>
 
 <p>
@@ -84,7 +88,7 @@ Look-back:
 		.append("g")
 		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-	d3.json( "/temps/?lookback="+lookback+'&'+new Date().getTime(), function(error,data){
+	d3.json( "/temps/?limit=250&lookback="+lookback+'&'+new Date().getTime(), function(error,data){
 		data = data.items
 	  data.forEach(function(d) {
 	    d.date = parseDate(d.timestamp);
@@ -129,8 +133,8 @@ Look-back:
 	function load_and_draw()
 	{
 		count += 1
-		console.log("/temps/" + '?lookback=' + lookback + "&" + new Date().getTime())
-		d3.json( "/temps/" + '?lookback=' + lookback + "&" + new Date().getTime()
+		console.log("/temps/" + '?limit=250&lookback=' + lookback + "&" + new Date().getTime())
+		d3.json( "/temps/" + '?limit=250&lookback=' + lookback + "&" + new Date().getTime()
 		, function(error, data) {
 			data = data.items
 		  data.forEach(function(d) {
