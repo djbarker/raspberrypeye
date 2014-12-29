@@ -21,6 +21,7 @@ body {
   fill: none;
   stroke: steelblue;
   stroke-width: 1.75px;
+  stroke-linejoin: round;
 }
 
 </style>
@@ -41,12 +42,12 @@ body {
 <p>
 Look-back: 
 <select name="Lookback" id="ddlookback" onChange="lookback_change()">
-	<option value="30m">30 minutes</option>
-	<option value="1h">1 hour</option>
-	<option value="6h" selected="selected">6 hours</option>
-	<option value="12h">12 hours</option>
-	<option value="1d">1 day</option>
-	<option value="7d">1 week</option>
+	<option value="30m" data-limit="100">30 minutes</option>
+	<option value="1h" data-limit="100">1 hour</option>
+	<option value="6h" data-limit="200" selected="selected">6 hours</option>
+	<option value="12h" data-limit="200">12 hours</option>
+	<option value="1d" data-limit="300">1 day</option>
+	<option value="7d" data-limit="450">1 week</option>
 </select>
 </p>
 
@@ -76,6 +77,7 @@ Look-back:
 
 	var count = 0
 	var lookback = '6h'
+	var dlimit = '200'
 
 	line = d3.svg.line()
 	    .x(function(d) { return x(d.date); })
@@ -88,7 +90,7 @@ Look-back:
 		.append("g")
 		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-	d3.json( "/temps/?limit=250&lookback="+lookback+'&'+new Date().getTime(), function(error,data){
+	d3.json( "/temps/?limit=400&lookback="+lookback+'&'+new Date().getTime(), function(error,data){
 		data = data.items
 	  data.forEach(function(d) {
 	    d.date = parseDate(d.timestamp);
@@ -126,6 +128,7 @@ Look-back:
 	{
 		var e = document.getElementById("ddlookback");
 		lookback = e.options[e.selectedIndex].value;
+		dlimit = e.options[e.selectedIndex].dataset.limit
 		load_and_draw()
 	}
 
@@ -133,8 +136,7 @@ Look-back:
 	function load_and_draw()
 	{
 		count += 1
-		console.log("/temps/" + '?limit=250&lookback=' + lookback + "&" + new Date().getTime())
-		d3.json( "/temps/" + '?limit=250&lookback=' + lookback + "&" + new Date().getTime()
+		d3.json( '/temps/?limit=' + dlimit + '&lookback=' + lookback + '&' + new Date().getTime()
 		, function(error, data) {
 			data = data.items
 		  data.forEach(function(d) {
